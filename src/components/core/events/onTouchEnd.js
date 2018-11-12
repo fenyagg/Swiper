@@ -73,7 +73,8 @@ export default function (event) {
     if (currentPos < -swiper.minTranslate()) {
       swiper.slideTo(swiper.activeIndex);
       return;
-    } else if (currentPos > -swiper.maxTranslate()) {
+    }
+    if (currentPos > -swiper.maxTranslate()) {
       if (swiper.slides.length < snapGrid.length) {
         swiper.slideTo(snapGrid.length - 1);
       } else {
@@ -114,6 +115,7 @@ export default function (event) {
       let doBounce = false;
       let afterBouncePosition;
       const bounceAmount = Math.abs(swiper.velocity) * 20 * params.freeModeMomentumBounceRatio;
+      let needsLoopFix;
       if (newPosition < swiper.maxTranslate()) {
         if (params.freeModeMomentumBounce) {
           if (newPosition + swiper.maxTranslate() < -bounceAmount) {
@@ -125,6 +127,7 @@ export default function (event) {
         } else {
           newPosition = swiper.maxTranslate();
         }
+        if (params.loop && params.centeredSlides) needsLoopFix = true;
       } else if (newPosition > swiper.minTranslate()) {
         if (params.freeModeMomentumBounce) {
           if (newPosition - swiper.minTranslate() > bounceAmount) {
@@ -136,6 +139,7 @@ export default function (event) {
         } else {
           newPosition = swiper.minTranslate();
         }
+        if (params.loop && params.centeredSlides) needsLoopFix = true;
       } else if (params.freeModeSticky) {
         let nextSlide;
         for (let j = 0; j < snapGrid.length; j += 1) {
@@ -151,6 +155,11 @@ export default function (event) {
           newPosition = snapGrid[nextSlide - 1];
         }
         newPosition = -newPosition;
+      }
+      if (needsLoopFix) {
+        swiper.once('transitionEnd', () => {
+          swiper.loopFix();
+        });
       }
       // Fix duration
       if (swiper.velocity !== 0) {

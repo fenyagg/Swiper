@@ -12,12 +12,12 @@ function isEventSupported() {
     isSupported = typeof element[eventName] === 'function';
   }
 
-  if (!isSupported &&
-    document.implementation &&
-    document.implementation.hasFeature &&
+  if (!isSupported
+    && document.implementation
+    && document.implementation.hasFeature
     // always returns true in newer browsers as per the standard.
     // @see http://dom.spec.whatwg.org/#dom-domimplementation-hasfeature
-    document.implementation.hasFeature('', '') !== true
+    && document.implementation.hasFeature('', '') !== true
   ) {
     // This is the only way to test support for the `wheel` event in IE9+.
     isSupported = document.implementation.hasFeature('Events.wheel', '3.0');
@@ -147,6 +147,9 @@ const Mousewheel = {
       swiper.mousewheel.lastScrollTime = (new window.Date()).getTime();
     } else {
       // Freemode or scrollContainer:
+      if (swiper.params.loop) {
+        swiper.loopFix();
+      }
       let position = swiper.getTranslate() + (delta * params.sensitivity);
       const wasBeginning = swiper.isBeginning;
       const wasEnd = swiper.isEnd;
@@ -174,7 +177,7 @@ const Mousewheel = {
       swiper.emit('scroll', e);
 
       // Stop autoplay
-      if (swiper.params.autoplay && swiper.params.autoplayDisableOnInteraction) swiper.stopAutoplay();
+      if (swiper.params.autoplay && swiper.params.autoplayDisableOnInteraction) swiper.autoplay.stop();
       // Return page scroll on edge positions
       if (position === swiper.minTranslate() || position === swiper.maxTranslate()) return true;
     }

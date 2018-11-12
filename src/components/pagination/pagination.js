@@ -103,16 +103,23 @@ const Pagination = {
       }
     }
     if (params.type === 'fraction') {
-      $el.find(`.${params.currentClass}`).text(current + 1);
-      $el.find(`.${params.totalClass}`).text(total);
+      $el.find(`.${params.currentClass}`).text(params.formatFractionCurrent(current + 1));
+      $el.find(`.${params.totalClass}`).text(params.formatFractionTotal(total));
     }
     if (params.type === 'progressbar') {
+      let progressbarDirection;
+      if (params.progressbarOpposite) {
+        progressbarDirection = swiper.isHorizontal() ? 'vertical' : 'horizontal';
+      } else {
+        progressbarDirection = swiper.isHorizontal() ? 'horizontal' : 'vertical';
+      }
       const scale = (current + 1) / total;
-      let scaleX = scale;
+      let scaleX = 1;
       let scaleY = 1;
-      if (!swiper.isHorizontal()) {
+      if (progressbarDirection === 'horizontal') {
+        scaleX = scale;
+      } else {
         scaleY = scale;
-        scaleX = 1;
       }
       $el.find(`.${params.progressbarFillClass}`).transform(`translate3d(0,0,0) scaleX(${scaleX}) scaleY(${scaleY})`).transition(swiper.params.speed);
     }
@@ -149,10 +156,9 @@ const Pagination = {
       if (params.renderFraction) {
         paginationHTML = params.renderFraction.call(swiper, params.currentClass, params.totalClass);
       } else {
-        paginationHTML =
-        `<span class="${params.currentClass}"></span>` +
-        ' / ' +
-        `<span class="${params.totalClass}"></span>`;
+        paginationHTML = `<span class="${params.currentClass}"></span>`
+        + ' / '
+        + `<span class="${params.totalClass}"></span>`;
       }
       $el.html(paginationHTML);
     }
@@ -177,10 +183,10 @@ const Pagination = {
     if ($el.length === 0) return;
 
     if (
-      swiper.params.uniqueNavElements &&
-      typeof params.el === 'string' &&
-      $el.length > 1 &&
-      swiper.$el.find(params.el).length === 1
+      swiper.params.uniqueNavElements
+      && typeof params.el === 'string'
+      && $el.length > 1
+      && swiper.$el.find(params.el).length === 1
     ) {
       $el = swiper.$el.find(params.el);
     }
@@ -197,6 +203,9 @@ const Pagination = {
       if (params.dynamicMainBullets < 1) {
         params.dynamicMainBullets = 1;
       }
+    }
+    if (params.type === 'progressbar' && params.progressbarOpposite) {
+      $el.addClass(params.progressbarOppositeClass);
     }
 
     if (params.clickable) {
@@ -240,9 +249,12 @@ export default {
       renderProgressbar: null,
       renderFraction: null,
       renderCustom: null,
+      progressbarOpposite: false,
       type: 'bullets', // 'bullets' or 'progressbar' or 'fraction' or 'custom'
       dynamicBullets: false,
       dynamicMainBullets: 1,
+      formatFractionCurrent: number => number,
+      formatFractionTotal: number => number,
       bulletClass: 'swiper-pagination-bullet',
       bulletActiveClass: 'swiper-pagination-bullet-active',
       modifierClass: 'swiper-pagination-', // NEW
@@ -250,6 +262,7 @@ export default {
       totalClass: 'swiper-pagination-total',
       hiddenClass: 'swiper-pagination-hidden',
       progressbarFillClass: 'swiper-pagination-progressbar-fill',
+      progressbarOppositeClass: 'swiper-pagination-progressbar-opposite',
       clickableClass: 'swiper-pagination-clickable', // NEW
       lockClass: 'swiper-pagination-lock',
     },
@@ -308,10 +321,10 @@ export default {
     click(e) {
       const swiper = this;
       if (
-        swiper.params.pagination.el &&
-        swiper.params.pagination.hideOnClick &&
-        swiper.pagination.$el.length > 0 &&
-        !$(e.target).hasClass(swiper.params.pagination.bulletClass)
+        swiper.params.pagination.el
+        && swiper.params.pagination.hideOnClick
+        && swiper.pagination.$el.length > 0
+        && !$(e.target).hasClass(swiper.params.pagination.bulletClass)
       ) {
         swiper.pagination.$el.toggleClass(swiper.params.pagination.hiddenClass);
       }
